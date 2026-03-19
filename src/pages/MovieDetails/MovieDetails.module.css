@@ -1,0 +1,14 @@
+.container {
+  padding: 20px;
+}
+
+.image {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
