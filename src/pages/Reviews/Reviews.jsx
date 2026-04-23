@@ -1,30 +1,35 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchMovieReviews } from '../../services/api';
+import { fetchMovieReviews } from '../../services/tmdbApi';
 import css from './Reviews.module.css';
 
-function Reviews() {
-  const { movieId } = useParams();
+export default function Reviews() {
   const [reviews, setReviews] = useState([]);
+  const { movieId } = useParams();
 
   useEffect(() => {
-    fetchMovieReviews(movieId).then(data => setReviews(data.results || []));
+    const getReviews = async () => {
+      try {
+        const data = await fetchMovieReviews(movieId);
+        setReviews(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getReviews();
   }, [movieId]);
 
+  if (reviews.length === 0) return <p>No reviews yet.</p>;
+
   return (
-    <div className={css.container}>
-      <h2>Reviews</h2>
-      {reviews.length === 0 && <p>No reviews</p>}
-      <ul className={css.list}>
-        {reviews.map(review => (
-          <li key={review.id}>
-            <h3>{review.author}</h3>
-            <p>{review.content}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className={css.list}>
+      {reviews.map(review => (
+        <li key={review.id} className={css.item}>
+          <h3>Author: {review.author}</h3>
+          <p>{review.content}</p>
+        </li>
+      ))}
+    </ul>
   );
 }
-
-export default Reviews;

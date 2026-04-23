@@ -1,35 +1,74 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { fetchMovieDetails } from '../../services/api';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useParams,
+} from 'react-router-dom';
+import { fetchMovieDetails } from '../../services/tmdbApi';
+import { getImageUrl } from '../../utils/getImageUrl';
 import css from './MovieDetails.module.css';
 
-function MovieDetails() {
-  const { movieId } = useParams();
+export default function MovieDetails() {
   const [movie, setMovie] = useState(null);
+  const { movieId } = useParams();
+  const location = useLocation();
+  const goBackLink = useRef(location.state?.from ?? '/movies');
 
   useEffect(() => {
-    fetchMovieDetails(movieId).then(setMovie);
+    const getMovie = async () => {
+      try {
+        const data = await fetchMovieDetails(movieId);
+        setMovie(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getMovie();
   }, [movieId]);
 
-  if (!movie) return <p className={css.container}>Loading...</p>;
-ф
-  return (
-    <div className={css.container}>
-      <h1>{movie.title}</h1>
-      <img
-        src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
-        alt={movie.title}
-        className={css.image}
-      />
-      <p>User score: {movie.vote_average}</p>
-      <p>{movie.overview}</p>
+  if (!movie) return <p>Loading movie...</p>;
 
-      <div className={css.links}>
-        <Link to={`/movies/${movieId}/cast`}>Cast</Link>
-        <Link to={`/movies/${movieId}/reviews`}>Reviews</Link>
+  const { title, poster_path, vote_average, overview, genres } = movie;
+
+  return (
+    <section className={css.section}>
+      <Link to={goBackLink.current} className={css.backLink}>
+        Go back
+      </Link>
+
+      <div className={css.wrapper}>
+        <img
+          src={getImageUrl(poster_path)}
+          alt={title}
+          className={css.image}
+        />
+
+        <div>
+          <h1>{title}</h1>
+          <p>User score: {Math.round(vote_average * 10)}%</p>
+          <h2>Overview</h2>
+          <p>{overview}</p>
+          <h2>Genres</h2>
+          <p>{genres.map(genre => genre.name).join(', ')}</p>
+        </div>
       </div>
-    </div>
+
+      <div className={css.additional}>
+        <h3>Additional information</h3>
+        <ul>
+          <li>
+            <NavLink to="cast">Cast</NavLink>
+          </li>
+          <li>
+            <NavLink to="reviews">Reviews</NavLink>
+          </li>
+        </ul>
+      </div>
+
+      <Outlet />
+    </section>
   );
 }
-
-export default MovieDetails;

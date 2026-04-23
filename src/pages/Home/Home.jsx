@@ -1,27 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchTrendingMovies } from '../../services/api';
+import { useLocation } from 'react-router-dom';
+import MovieList from '../../components/MovieList/MovieList';
+import { fetchTrendingMovies } from '../../services/tmdbApi';
 import css from './Home.module.css';
 
-function Home() {
+export default function Home() {
   const [movies, setMovies] = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
-    fetchTrendingMovies().then(setMovies);
+    const getMovies = async () => {
+      try {
+        const data = await fetchTrendingMovies();
+        setMovies(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getMovies();
   }, []);
 
   return (
-    <div className={css.container}>
-      <h1>Trending today</h1>
-      <ul className={css.list}>
-        {movies.map(movie => (
-          <li key={movie.id}>
-            <Link to={`/movies/${movie.id}`}>{movie.title}</Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className={css.section}>
+      <h1 className={css.title}>Trending today</h1>
+      <MovieList movies={movies} location={location} />
+    </section>
   );
 }
-
-export default Home;

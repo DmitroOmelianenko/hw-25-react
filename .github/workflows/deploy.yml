@@ -1,31 +1,50 @@
-name: Deploy to GitHub Pages
+name: Deploy React App
 
 on:
   push:
     branches:
-      - main  # або master, залежно від назви твоєї головної гілки
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  build_site:
+  build_and_deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
+      - name: Build project
         run: npm run build
+        env:
+          CI: false
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: dist # якщо використовуєш Vite, або 'build', якщо Create React App
-          branch: gh-pages
+          path: build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
